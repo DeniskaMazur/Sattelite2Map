@@ -1,254 +1,88 @@
-<!DOCTYPE HTML>
-<html>
+__author__ = 'Fabian Isensee'
+from collections import OrderedDict
+from lasagne.layers import (InputLayer, ConcatLayer, Pool2DLayer, ReshapeLayer, DimshuffleLayer, NonlinearityLayer,
+                            DropoutLayer, Deconv2DLayer, batch_norm, DenseLayer)
+try:
+    from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
+except ImportError:
+    from lasagne.layers import Conv2DLayer as ConvLayer
+import lasagne
+from lasagne.init import HeNormal
+from lasagne.nonlinearities import LeakyRectify, sigmoid
+lref = LeakyRectify(0.2)
 
-<head>
-    <meta charset="utf-8">
 
-    <title>Jupyter Notebook</title>
-    <link rel="shortcut icon" type="image/x-icon" href="/static/base/images/favicon.ico?v=97c6417ed01bdc0ae3ef32ae4894fd03">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="stylesheet" href="/static/components/jquery-ui/themes/smoothness/jquery-ui.min.css?v=9b2c8d3489227115310662a343fce11c" type="text/css" />
-    <link rel="stylesheet" href="/static/components/jquery-typeahead/dist/jquery.typeahead.min.css?v=7afb461de36accb1aa133a1710f5bc56" type="text/css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+def build_UNet(inputVar=None, nonlinearity=lasagne.nonlinearities.elu, input_dim=(128, 128), base_n_filters=64, do_dropout=False):
+    net = OrderedDict()
+    pad = "same"
+    if not inputVar:
+        net['input'] = InputLayer((None, 3, input_dim[0], input_dim[1]))
+    else:
+        net['input'] = InputLayer((None, 3, input_dim[0], input_dim[1]), inputVar)
     
+    net['contr_1_1'] = batch_norm(ConvLayer(net['input'], base_n_filters, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['contr_1_2'] = batch_norm(ConvLayer(net['contr_1_1'], base_n_filters, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['pool1'] = Pool2DLayer(net['contr_1_2'], 2, mode="average_exc_pad")
+
+    net['contr_2_1'] = batch_norm(ConvLayer(net['pool1'], base_n_filters*2, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['contr_2_2'] = batch_norm(ConvLayer(net['contr_2_1'], base_n_filters*2, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['pool2'] = Pool2DLayer(net['contr_2_2'], 2, mode="average_exc_pad")
+
+    net['contr_3_1'] = batch_norm(ConvLayer(net['pool2'], base_n_filters*4, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['contr_3_2'] = batch_norm(ConvLayer(net['contr_3_1'], base_n_filters*4, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['pool3'] = Pool2DLayer(net['contr_3_2'], 2, mode="average_exc_pad")
+
+    net['contr_4_1'] = batch_norm(ConvLayer(net['pool3'], base_n_filters*8, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['contr_4_2'] = batch_norm(ConvLayer(net['contr_4_1'], base_n_filters*8, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    l = net['pool4'] = Pool2DLayer(net['contr_4_2'], 2, mode="average_exc_pad")
+    # the paper does not really describe where and how dropout is added. Feel free to try more options
+    if do_dropout:
+        l = DropoutLayer(l, p=0.4)
+
+    net['encode_1'] = batch_norm(ConvLayer(l, base_n_filters*16, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['encode_2'] = batch_norm(ConvLayer(net['encode_1'], base_n_filters*16, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['upscale1'] = batch_norm(Deconv2DLayer(net['encode_2'], base_n_filters*16, 2, 2, crop="valid", nonlinearity=nonlinearity, W=HeNormal(gain="relu")))
+
+    net['concat1'] = ConcatLayer([net['upscale1'], net['contr_4_2']], cropping=(None, None, "center", "center"))
+    net['expand_1_1'] = batch_norm(ConvLayer(net['concat1'], base_n_filters*8, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['expand_1_2'] = batch_norm(ConvLayer(net['expand_1_1'], base_n_filters*8, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['upscale2'] = batch_norm(Deconv2DLayer(net['expand_1_2'], base_n_filters*8, 2, 2, crop="valid", nonlinearity=nonlinearity, W=HeNormal(gain="relu")))
+
+    net['concat2'] = ConcatLayer([net['upscale2'], net['contr_3_2']], cropping=(None, None, "center", "center"))
+    net['expand_2_1'] = batch_norm(ConvLayer(net['concat2'], base_n_filters*4, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['expand_2_2'] = batch_norm(ConvLayer(net['expand_2_1'], base_n_filters*4, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['upscale3'] = batch_norm(Deconv2DLayer(net['expand_2_2'], base_n_filters*4, 2, 2, crop="valid", nonlinearity=nonlinearity, W=HeNormal(gain="relu")))
+
+    net['concat3'] = ConcatLayer([net['upscale3'], net['contr_2_2']], cropping=(None, None, "center", "center"))
+    net['expand_3_1'] = batch_norm(ConvLayer(net['concat3'], base_n_filters*2, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['expand_3_2'] = batch_norm(ConvLayer(net['expand_3_1'], base_n_filters*2, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['upscale4'] = batch_norm(Deconv2DLayer(net['expand_3_2'], base_n_filters*2, 2, 2, crop="valid", nonlinearity=nonlinearity, W=HeNormal(gain="relu")))
+
+    net['concat4'] = ConcatLayer([net['upscale4'], net['contr_1_2']], cropping=(None, None, "center", "center"))
+    net['expand_4_1'] = batch_norm(ConvLayer(net['concat4'], base_n_filters, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+    net['expand_4_2'] = batch_norm(ConvLayer(net['expand_4_1'], base_n_filters, 3, nonlinearity=nonlinearity, pad=pad, W=HeNormal(gain="relu")))
+
+    net['output'] = ConvLayer(net['expand_4_2'], 3, 1, nonlinearity=None)
+
+    return net
+
+
+
+def build_Discriminator(input_var=None, img_size=[128, 128], base_units=64):
+    discr = {}
     
+    if not input_var:
+        discr["input"] = InputLayer((None, 3, img_size[0], img_size[1]))
+    else:
+        discr["input"] = InputLayer((None, 3, img_size[0], img_size[1]), input_var)
+        
+    discr["conv_1"] = ConvLayer(discr["input"], base_units, 5, nonlinearity=lref)
+    discr["pool_1"] = Pool2DLayer(discr["input"], 2)
 
-    <link rel="stylesheet" href="/static/style/style.min.css?v=29c09309dd70e7fe93378815e5f022ae" type="text/css"/>
+    discr["conv_2"] = ConvLayer(discr["pool_1"], base_units*2, 5, nonlinearity=lref)
+    discr["pool_2"] = Pool2DLayer(discr["conv_2"], 2)
+
+    discr["dense_1"] = DenseLayer(discr["pool_2"], 1024, nonlinearity=lref)
+    discr["output"] = DenseLayer(discr["dense_1"], 1, nonlinearity=sigmoid)
     
-<link rel="stylesheet" href="/static/auth/css/override.css?v=19ec59d2c4f1203c49fe47462028cd9a" type="text/css" />
-
-    <link rel="stylesheet" href="/custom/custom.css" type="text/css" />
-    <script src="/static/components/es6-promise/promise.min.js?v=f004a16cb856e0ff11781d01ec5ca8fe" type="text/javascript" charset="utf-8"></script>
-    <script src="/static/components/preact/index.js?v=5b98fce8b86ce059de89f9e728e16957" type="text/javascript"></script>
-    <script src="/static/components/proptypes/index.js?v=c40890eb04df9811fcc4d47e53a29604" type="text/javascript"></script>
-    <script src="/static/components/preact-compat/index.js?v=d376eb109a00b9b2e8c0d30782eb6df7" type="text/javascript"></script>
-    <script src="/static/components/requirejs/require.js?v=6da8be361b9ee26c5e721e76c6d4afce" type="text/javascript" charset="utf-8"></script>
-    <script>
-      require.config({
-          
-          urlArgs: "v=20170622100012",
-          
-          baseUrl: '/static/',
-          paths: {
-            'auth/js/main': 'auth/js/main.min',
-            custom : '/custom',
-            nbextensions : '/nbextensions',
-            kernelspecs : '/kernelspecs',
-            underscore : 'components/underscore/underscore-min',
-            backbone : 'components/backbone/backbone-min',
-            jquery: 'components/jquery/jquery.min',
-            bootstrap: 'components/bootstrap/js/bootstrap.min',
-            bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
-            moment: 'components/moment/moment',
-            codemirror: 'components/codemirror',
-            termjs: 'components/xterm.js/dist/xterm',
-            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead.min',
-          },
-          map: { // for backward compatibility
-              "*": {
-                  "jqueryui": "jquery-ui",
-              }
-          },
-          shim: {
-            typeahead: {
-              deps: ["jquery"],
-              exports: "typeahead"
-            },
-            underscore: {
-              exports: '_'
-            },
-            backbone: {
-              deps: ["underscore", "jquery"],
-              exports: "Backbone"
-            },
-            bootstrap: {
-              deps: ["jquery"],
-              exports: "bootstrap"
-            },
-            bootstraptour: {
-              deps: ["bootstrap"],
-              exports: "Tour"
-            },
-            "jquery-ui": {
-              deps: ["jquery"],
-              exports: "$"
-            }
-          },
-          waitSeconds: 30,
-      });
-
-      require.config({
-          map: {
-              '*':{
-                'contents': 'services/contents',
-              }
-          }
-      });
-
-      // error-catching custom.js shim.
-      define("custom", function (require, exports, module) {
-          try {
-              var custom = require('custom/custom');
-              console.debug('loaded custom.js');
-              return custom;
-          } catch (e) {
-              console.error("error loading custom.js", e);
-              return {};
-          }
-      })
-    </script>
-
-    
-    
-
-</head>
-
-<body class=""
- 
-  
- 
-dir="ltr">
-
-<noscript>
-    <div id='noscript'>
-      Jupyter Notebook requires JavaScript.<br>
-      Please enable it to proceed.
-  </div>
-</noscript>
-
-<div id="header">
-  <div id="header-container" class="container">
-  <div id="ipython_notebook" class="nav navbar-brand pull-left"><a href="/tree" title='dashboard'><img src='/static/base/images/logo.png?v=641991992878ee24c6f3826e81054a0f' alt='Jupyter Notebook'/></a></div>
-
-  
-  
-  
-
-
-  
-
-  
-  
-  </div>
-  <div class="header-bar"></div>
-
-  
-  
-</div>
-
-<div id="site">
-
-
-<div id="ipython-main-app" class="container">
-
-    
-    
-    <div class="row">
-    <div class="navbar col-sm-8">
-      <div class="navbar-inner">
-        <div class="container">
-          <div class="center-nav">
-            <p class="navbar-text nav">Password or token:</p>
-            <form action="/login?next=%2Ffiles%2FSatelites%2Funet.py" method="post" class="navbar-form pull-left">
-              <input type="hidden" name="_xsrf" value="2|5b0025cc|98b72c865fe1ee3701ddfd2ce14066eb|1500203735"/>
-              <input type="password" name="password" id="password_input" class="form-control">
-              <button type="submit" id="login_submit">Log in</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-    
-    
-    
-    
-    <div class="col-sm-6 col-sm-offset-3 text-left rendered_html">
-      <h3>
-        Token authentication is enabled
-      </h3>
-      <p>
-        If no password has been configured, you need to open the notebook
-        server with its login token in the URL, or paste it above.
-        This requirement will be lifted if you
-        <b><a href='https://jupyter-notebook.readthedocs.io/en/stable/public_server.html'>
-            enable a password</a></b>.
-      </p>
-      <p>
-        The command:
-        <pre>jupyter notebook list</pre>
-        will show you the URLs of running servers with their tokens,
-        which you can copy and paste into your browser. For example:
-      </p>
-      <pre>Currently running servers:
-http://localhost:8888/?token=c8de56fa... :: /Users/you/notebooks
-</pre>
-      <p>
-        or you can paste just the token value into the password field on this
-        page.
-      </p>
-      <p>
-        See
-        <b><a
-         href='https://jupyter-notebook.readthedocs.io/en/stable/public_server.html'>
-                the documentation on how to enable a password</a>
-        </b>
-        in place of token authentication,
-        if you would like to avoid dealing with random tokens.
-      </p>
-      <p>
-        Cookies are required for authenticated access to notebooks.
-      </p>
-
-    </div>
-    
-    
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-
-<script type="text/javascript">
-  require(["auth/js/main"], function (auth) {
-    auth.login_main();
-  });
-</script>
-
-
-
-<script type='text/javascript'>
-  function _remove_token_from_url() {
-    if (window.location.search.length <= 1) {
-      return;
-    }
-    var search_parameters = window.location.search.slice(1).split('&');
-    for (var i = 0; i < search_parameters.length; i++) {
-      if (search_parameters[i].split('=')[0] === 'token') {
-        // remote token from search parameters
-        search_parameters.splice(i, 1);
-        var new_search = '';
-        if (search_parameters.length) {
-          new_search = '?' + search_parameters.join('&');
-        }
-        var new_url = window.location.origin + 
-                      window.location.pathname + 
-                      new_search + 
-                      window.location.hash;
-        window.history.replaceState({}, "", new_url);
-        return;
-      }
-    }
-  }
-  _remove_token_from_url();
-</script>
-</body>
-
-</html>
+    return discr
