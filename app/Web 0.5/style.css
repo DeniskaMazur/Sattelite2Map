@@ -1,0 +1,157 @@
+/*****global*****/
+a, article, body, div, footer, h1, h2, h3, h6, header, html, img, li, p, section, strong, ul {
+	background: transparent;
+	border: 0 none;
+	font-size: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	vertical-align: top;
+}
+article, footer, header, section {
+	splay:block;
+}
+body {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:100%;
+	color:#030303;
+	min-width:1060px;
+	background:#f3f3f3;
+}
+.wrapper {
+	width:100%;
+	overflow:hidden;
+}
+.aligncenter {
+	text-align:center;
+}
+/*****head*****/
+h1 {
+	padding:19px 32px 0 1px;
+	float:left;
+}
+h1 a {
+	display:block;
+	width:179px;
+	height:61px;
+	text-indent:-9999em;
+	background:url(images/logo.png) 0 0 no-repeat;
+}
+h2 {
+	font-size:30px;
+	line-height:1.2em;
+	color:#FFF;
+	padding:10px 0 0 40px;
+	margin-top:28px;
+	background:url(images/point.gif) 0 0 repeat-y;
+	overflow:hidden;
+}
+/*****body*****/
+p {
+	margin-bottom:18px;
+}
+h3 {
+	font-size:24px;
+	line-height:1.5em;
+	margin-bottom:18px;
+}
+h6 {
+	color:#000;
+}
+#page1 .row-bot-bg {
+	padding:10px 0 50px;
+}
+#content {
+	width:100%;
+	padding:33px 0 50px;
+	background:#fff;
+	position:relative;
+	z-index:1;
+}
+.indent-left {
+	padding-left:300px; /***отступ правого блока***/
+}
+.row-bot {
+	width:100%;
+	background:url(images/subbackground.gif) center top repeat;
+}
+.row-bot-bg {
+	width:100%;
+	padding:10px 0 55px;
+	background:url(images/background.jpg) center top no-repeat;
+}
+.img-indent2 {
+	float:left;
+	margin:0 56px;
+}
+.p6 {
+	margin-bottom:15px;
+}
+.main {
+	width:960px;
+	padding:0;
+	margin:0 auto;
+	font-size:13px;
+	line-height:24px;
+}
+.container_12 {
+	margin-left: auto;
+	margin-right: auto;
+	width: 960px;
+}
+.grid_4 {
+	display:inline;
+	float: left;
+	position: relative;
+	margin-left: 30px; /***отступ левого блока***/
+	margin-right: 0px; /***не трогать!!!***/
+}
+.prev-indent-bot {
+	margin-bottom:10px;
+}
+.img-indent-bot {
+	margin-bottom:25px;
+}
+.p1 {
+	margin-bottom:8px;
+}
+.extra-wrap {
+	overflow:hidden;
+}
+.text-1 {
+	display:block;
+	font-size:16px;
+	line-height:30px;
+	color:#7f7f7f;
+	padding:5px 0 0 42px;
+	background:url(images/point.gif) 0 0 repeat-y;
+}
+/*****hyper-points*****/
+ul {
+	list-style: none;
+}
+.list-1 li a {
+	text-decoration:none;
+}
+.list-1 li {
+	line-height:18px;
+	padding:6px 0 6px 15px;
+	background:url(images/arrow.gif) 0 13px no-repeat;
+}
+.list-1 li a {
+	display:inline-block;
+	color:#030303;
+}
+.list-1 li a:hover {
+	color:#68ab0b;
+	text-decoration:underline;
+}
+/*****foot*****/
+footer {
+	width:100%;
+	padding:43px 0;
+}
+.p0 {
+	margin-bottom:0px;
+}
