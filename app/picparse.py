@@ -21,6 +21,8 @@ def load_map(pos, m_type, fname, z=16):
     if m_type == "map":
         label = ".png"
 
+    print(fname+label)
+
     with open(fname + label, "wb") as handle:
         response = requests.get(LINK, stream=True)
 
@@ -34,16 +36,16 @@ def load_map(pos, m_type, fname, z=16):
             handle.write(block)
 
 
-def get_the_pictures(adress, save_path="pics/"):
+def get_the_pictures(adress, save_path="pics"):
     if save_path not in os.listdir("."):
         os.mkdir(save_path)
 
     coords = address2coords(adress)
     coords = {"lat" : coords[0], "lon" : coords[1]}
 
-    load_map(coords, "map")
-    load_map(coords, "sat")
+    load_map(coords, "map", save_path+"/map")
+    load_map(coords, "sat", save_path+"/sat")
 
     #TODO add map generation with nn
 
-print(address2coords("Moscow, Mironovskaya, 25"))
+print(get_the_pictures("red square"))
