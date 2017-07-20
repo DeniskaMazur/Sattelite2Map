@@ -87,7 +87,7 @@ model = model_from_json('{"class_name": "Sequential", "config": [{"class_name": 
                         '"kernel_constraint": null, "bias_constraint": null}}], "keras_version": "2.0.6", "backend": '
                         '"tensorflow"}')
 
-model.load_weights('model/map_net_weights_526')
+model.load_weights('weights/vanilla_conv_weights')
 
 
 def get_prediction(path='static/images/cat/sat.jpg'):

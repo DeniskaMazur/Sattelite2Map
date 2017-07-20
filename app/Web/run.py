@@ -5,8 +5,8 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from flask import url_for
-from neuro1 import get_prediction
-from picparse import get_the_pictures
+from model.neuro1 import get_prediction
+from app.picparse import get_the_pictures
 
 app = Flask(__name__)
 

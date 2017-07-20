@@ -6,10 +6,10 @@ from model.training.unet import build_UNet
 from model.training.preproc import pics2array
 
 class Generator:
-    def __init__(self, weights):
+    def __init__(self, weights="model/weights/pix2pix_weights.pcl"):
         """
 
-        :param weights: filename with model weights
+        :param weights: filename with weights weights
         """
 
         with open(weights, "rb") as file:
