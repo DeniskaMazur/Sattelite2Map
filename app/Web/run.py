@@ -38,13 +38,13 @@ def load_map(pos, m_type, fname, z=16):
 
             handle.write(block)
 
-def get_the_pictures(adress, save_path="static/images/cat"):
+def get_the_pictures(adress, fname, save_path="static/images/cat"):
     print(os.listdir("static/images"))
     coords = address2coords(adress)
     coords = {"lat" : coords[0], "lon" : coords[1]}
 
-    load_map(coords, "map", save_path+"/map")
-    load_map(coords, "sat", save_path+"/sat")
+    load_map(coords, "map", save_path+"/"+fname+".map")
+    load_map(coords, "sat", save_path+"/"+fname+".sat")
 
 @app.route('/')
 def my_form():

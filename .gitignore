@@ -104,6 +104,9 @@ ENV/
 .pcl
 
 #garbage
-/data
+**/data
+**/pics
+
 
 .idea/*
+
