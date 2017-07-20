@@ -2,8 +2,8 @@ import theano
 import pickle
 import matplotlib.pyplot as plt
 from lasagne.layers import get_output, set_all_param_values
-from model.unet import build_UNet
-from model.preproc import pics2array
+from model.training.unet import build_UNet
+from model.training.preproc import pics2array
 
 class Generator:
     def __init__(self, weights):
