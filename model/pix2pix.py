@@ -8,8 +8,7 @@ from model.training.preproc import pics2array
 class Generator:
     def __init__(self, weights="model/weights/pix2pix_weights.pcl"):
         """
-
-        :param weights: filename with weights weights
+        :param weights: filename with models weights
         """
 
         with open(weights, "rb") as file:
