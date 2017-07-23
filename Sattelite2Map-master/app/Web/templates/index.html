@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Спутники</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" type="text/css" media="screen">
+</head>
+<body id="page1">
+<!--==============================header=================================-->
+<header>
+  <div class="row-bot">
+    <div class="row-bot-bg">
+      <div class="main">
+        <div class="wrapper p6">
+          <h1><a href="https://sochisirius.ru/">Сириус</a></h1>
+          <h2>Big Data</h2>
+        </div>
+        <div class="wrapper">
+          <figure class="img-indent2"><img src="{{ url_for('static', filename='images/bigdata-logo.png') }}" alt=""></figure>
+          <div class="extra-wrap"> <strong class="text-1"><br>Распознавание объектов на спутниковых снимках<br><br></strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<!--==============================content================================-->
+<section id="content">
+<div class="aligncenter">
+  <h3 class="prev-indent-bot">Введите адрес:</h3>
+  <form action="." method="POST">
+    <input type="text" name="text" size="40"><input type="submit" name="my-form" value="Отправить">
+  </form>
+</div><br><br><br>
+  <div class="main">
+      <div class="wrapper">
+        <article class="grid_4">
+            <div class="aligncenter">
+            <h3 class="prev-indent-bot">Спутниковые снимки</h3>
+            <p class="img-indent-bot"><img src="{{ url_for('static', filename=imgname1) }}" alt="">     <img src="{{ url_for('static', filename=imgname2) }}" alt=""><br>Слева - спутниковый снимок, cправа - карта с сервиса Яндекс.карты</p></div>
+            <h6 class="p1">Инфоблок 1</h6>
+            <p class="img-indent-bot">Инфа</p>
+            <h6 class="p1">Инфоблок 2</h6>
+            <p class="img-indent-bot">Инфа</p></article>
+        <article class="grid_4">
+            <div class="indent-left">
+                <div class="aligncenter">
+                    <h3 class="p1">Результат работы нейросетей</h3>
+                    <p class="img-indent-bot"><img src="{{ url_for('static', filename=imgname3) }}" alt="">   <img src="{{ url_for('static', filename='images/map1.png') }}" alt=""><br>Слева - сверточная нейросеть, справа - GAN-сеть</p></div>
+                    <h6 class="p1">Инфоблок 1</h6>
+                    <p class="img-indent-bot">Инфа</p>
+                    <h6 class="p1">Почему же сетка так хорошо робит?</h6>
+                    <ul class="list-1">
+                        <li><a href="#">Потому что она написана не Димой</a></li>
+                        <li><a href="#">Пингвинчик 128x128</a></li>
+                    </ul>
+            </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+<!--==============================footer=================================-->
+<footer>
+  <div class="main">
+    <div class="aligncenter">
+      <p class="p0">Copyright &copy; Artemiy Khitrikov, All Rights Reserved, 2017</p>
+  </div>
+</footer>
+</body>
+</html>
